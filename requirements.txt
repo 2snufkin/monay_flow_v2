@@ -1,0 +1,27 @@
+# Core Dependencies
+pandas>=2.0.0
+openpyxl>=3.1.0
+pymongo>=4.6.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+
+# Data Processing
+numpy>=1.24.0
+xlrd>=2.0.0
+
+# Async Processing
+aiofiles>=23.0.0
+
+# Utilities
+python-dateutil>=2.8.0
+
+# Fuzzy String Matching
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.20.0
+
+# Configuration
+pydantic>=2.0.0
+pyyaml>=6.0.0
+
+# Logging
+loguru>=0.7.0
