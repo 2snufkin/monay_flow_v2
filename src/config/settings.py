@@ -7,7 +7,8 @@ logging settings.
 """
 
 from pathlib import Path
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 # Load environment variables first, before any settings are created
 from dotenv import load_dotenv
