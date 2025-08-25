@@ -1,15 +1,17 @@
 """
-Application Settings and Configuration
+Application configuration and settings management.
 
-This module handles all application configuration including database connections,
-AI API settings, file processing parameters, and UI preferences.
+This module provides centralized configuration management for the
+MoneyFlow application, including database, AI, processing, UI, and
+logging settings.
 """
 
-import os
 from pathlib import Path
-from typing import Optional
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import BaseSettings, Field
+
+# Load environment variables first, before any settings are created
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class DatabaseSettings(BaseSettings):

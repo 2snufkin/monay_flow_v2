@@ -7,7 +7,6 @@ It initializes the UI and starts the application.
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add src directory to Python path
