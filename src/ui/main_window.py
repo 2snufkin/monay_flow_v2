@@ -50,7 +50,6 @@ class ModernMainWindow:
         # State variables
         self.current_schema: Optional[SchemaDefinition] = None
         self.selected_file: Optional[Path] = None
-        self.preview_data: List[Dict[str, Any]] = []
 
         # Setup UI
         self.setup_ui()
@@ -411,61 +410,7 @@ class ModernMainWindow:
         right_frame.grid_columnconfigure(0, weight=1)
         right_frame.grid_rowconfigure(1, weight=1)
 
-        # Data preview panel with modern styling
-        preview_frame = tk.LabelFrame(
-            right_frame,
-            text="👀 Data Preview",
-            font=("Segoe UI", 12, "bold"),
-            fg=self.colors["text"],
-            bg=self.colors["surface"],
-            relief="solid",
-            bd=1,
-        )
-        preview_frame.grid(row=0, column=0, sticky="ew", pady=(0, 15))
-        preview_frame.grid_columnconfigure(0, weight=1)
-        preview_frame.grid_rowconfigure(1, weight=1)
-
-        # Preview controls
-        preview_controls = tk.Frame(preview_frame, bg=self.colors["surface"])
-        preview_controls.grid(row=0, column=0, sticky="ew", pady=(20, 15), padx=20)
-
-        preview_label = tk.Label(
-            preview_controls,
-            text="📊 First 5 rows:",
-            font=("Segoe UI", 10, "bold"),
-            fg=self.colors["text"],
-            bg=self.colors["surface"],
-        )
-        preview_label.grid(row=0, column=0, sticky="w")
-
-        refresh_btn = tk.Button(
-            preview_controls,
-            text="🔄 Refresh",
-            command=self.refresh_preview,
-            bg=self.colors["secondary"],
-            fg="white",
-            font=("Segoe UI", 9),
-            relief="flat",
-            padx=15,
-            pady=6,
-            cursor="hand2",
-        )
-        refresh_btn.grid(row=0, column=1, padx=(15, 0))
-
-        # Modern treeview with better styling
-        tree_frame = tk.Frame(preview_frame, bg=self.colors["surface"])
-        tree_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=(0, 20))
-        tree_frame.grid_columnconfigure(0, weight=1)
-        tree_frame.grid_rowconfigure(0, weight=1)
-
-        self.preview_tree = ttk.Treeview(tree_frame, show="headings", height=8)
-        preview_scrollbar = ttk.Scrollbar(
-            tree_frame, orient="vertical", command=self.preview_tree.yview
-        )
-        self.preview_tree.configure(yscrollcommand=preview_scrollbar.set)
-
-        self.preview_tree.grid(row=0, column=0, sticky="nsew")
-        preview_scrollbar.grid(row=0, column=1, sticky="ns")
+        # Data preview panel removed - functionality not needed
 
         # Progress panel with modern styling
         progress_frame = tk.LabelFrame(
@@ -542,8 +487,8 @@ class ModernMainWindow:
 
         results_btn = tk.Button(
             progress_controls,
-            text="📊 View Results",
-            command=self.view_results,
+            text="📊 Import Report",
+            command=self.show_import_report,
             bg=self.colors["primary"],
             fg="white",
             font=("Segoe UI", 9),
@@ -699,64 +644,7 @@ class ModernMainWindow:
                     text=f"File validation failed: {error_message}"
                 )
 
-    def preview_data(self):
-        """Preview the selected Excel file data."""
-        if not self.selected_file:
-            messagebox.showwarning("Warning", "Please select an Excel file first")
-            return
-
-        try:
-            # Validate file first
-            if not self.excel_processor.validate_file(self.selected_file):
-                messagebox.showerror("Error", "Invalid Excel file")
-                return
-
-            # Get preview data
-            preview_df = self.excel_processor.preview_data(
-                self.selected_file, start_row=self.start_row_var.get(), num_rows=5
-            )
-
-            if not preview_df.empty:
-                # Convert to list of dictionaries for display
-                self.preview_data = preview_df.to_dict("records")
-                self.update_preview_treeview()
-                self.status_label.config(
-                    text=f"Preview loaded: {len(self.preview_data)} rows"
-                )
-            else:
-                messagebox.showinfo("Info", "No data found in the specified range")
-
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to preview data: {e}")
-            self.status_label.config(text=f"Preview failed: {str(e)}")
-
-    def update_preview_treeview(self):
-        """Update the preview treeview with data."""
-        # Clear existing data
-        for item in self.preview_tree.get_children():
-            self.preview_tree.delete(item)
-
-        if not self.preview_data:
-            return
-
-        # Setup columns
-        columns = list(self.preview_data[0].keys())
-        self.preview_tree["columns"] = columns
-
-        # Configure column headings
-        for col in columns:
-            self.preview_tree.heading(col, text=col)
-            self.preview_tree.column(col, width=100, minwidth=80)
-
-        # Add data rows
-        for row_data in self.preview_data:
-            values = [str(row_data.get(col, "")) for col in columns]
-            self.preview_tree.insert("", "end", values=values)
-
-    def refresh_preview(self):
-        """Refresh the data preview."""
-        if self.selected_file:
-            self.preview_data()
+    # Preview methods removed - functionality not needed
 
     def start_import(self):
         """Start the data import process with validation."""
@@ -893,9 +781,135 @@ class ModernMainWindow:
             f"({progress.progress_percentage:.1f}%)"
         )
 
-    def view_results(self):
-        """View import results."""
-        messagebox.showinfo("Results", "Import results feature coming soon!")
+    def show_import_report(self):
+        """Show detailed import report with database querying."""
+        if not self.current_schema:
+            messagebox.showwarning("Warning", "Please select a schema first")
+            return
+            
+        try:
+            # Get current collection info
+            db_name = self.current_schema.database_name
+            collection_name = self.current_schema.collections[0].name if self.current_schema.collections else "default"
+            
+            # Query MongoDB for real-time statistics
+            from config.database_config import get_mongo_client
+            mongo_client = get_mongo_client()
+            db = mongo_client[db_name]
+            collection = db[collection_name]
+            
+            # Get document counts
+            total_documents = collection.count_documents({})
+            
+            # Get recent import statistics (documents with _imported_at field)
+            recent_imports = collection.count_documents({
+                "_imported_at": {"$exists": True}
+            })
+            
+            # Get duplicate detection info
+            duplicate_fields = self.current_schema.duplicate_detection_columns
+            duplicate_info = []
+            for field in duplicate_fields:
+                duplicates = collection.count_documents({
+                    field: {"$exists": True}
+                })
+                duplicate_info.append(f"{field}: {duplicates} documents")
+            
+            # Create detailed report
+            report_text = f"""
+📊 IMPORT REPORT FOR: {self.current_schema.schema_name}
+
+🗄️ Database: {db_name}
+📁 Collection: {collection_name}
+
+📈 DOCUMENT STATISTICS:
+   • Total documents: {total_documents:,}
+   • Recent imports: {recent_imports:,}
+   • Schema created: {self.current_schema.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+   • Last used: {self.current_schema.last_used.strftime('%Y-%m-%d %H:%M:%S')}
+   • Usage count: {self.current_schema.usage_count}
+
+🔍 DUPLICATE DETECTION:
+   • Strategy: {self.current_schema.duplicate_strategy}
+   • Fields: {', '.join(duplicate_fields) if duplicate_fields else 'None configured'}
+
+📋 SCHEMA DETAILS:
+   • Excel columns: {len(self.current_schema.excel_column_names)}
+   • MongoDB fields: {len(self.current_schema.normalized_attributes)}
+   • Data start row: {self.current_schema.data_start_row} (1-based, row {self.current_schema.data_start_row} = first data row)
+   • Indexes: {len(self.current_schema.suggested_indexes)} configured
+
+💡 Note: Data start row {self.current_schema.data_start_row} means Excel row {self.current_schema.data_start_row} (1-based indexing)
+"""
+            
+            # Show report in a dialog
+            self._show_report_dialog("Import Report", report_text)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate report: {e}")
+        finally:
+            if 'mongo_client' in locals():
+                mongo_client.close()
+    
+    def _show_report_dialog(self, title: str, content: str):
+        """Show a report dialog with scrollable content."""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(title)
+        dialog.geometry("700x600")
+        dialog.transient(self.root)
+        dialog.grab_set()
+        dialog.configure(bg="#f8fafc")
+        
+        # Title
+        title_label = tk.Label(
+            dialog,
+            text=title,
+            font=("Segoe UI", 18, "bold"),
+            fg="#2563eb",
+            bg="#f8fafc",
+        )
+        title_label.pack(pady=(20, 20))
+        
+        # Content frame
+        content_frame = tk.Frame(dialog, bg="#ffffff", relief="solid", bd=1)
+        content_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        
+        # Text widget with scrollbar
+        text_widget = tk.Text(
+            content_frame,
+            wrap="word",
+            font=("Consolas", 10),
+            bg="#ffffff",
+            fg="#1e293b",
+            relief="flat",
+            padx=15,
+            pady=15
+        )
+        
+        scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=text_widget.yview)
+        text_widget.configure(yscrollcommand=scrollbar.set)
+        
+        text_widget.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Insert content
+        text_widget.insert("1.0", content)
+        text_widget.config(state="disabled")  # Make read-only
+        
+        # Close button
+        close_btn = tk.Button(
+            dialog,
+            text="Close",
+            command=dialog.destroy,
+            bg="#64748b",
+            fg="white",
+            font=("Segoe UI", 11),
+            relief="flat",
+            padx=25,
+            pady=8,
+            cursor="hand2",
+        )
+        close_btn.pack(pady=(0, 20))
 
     def show_create_schema_dialog(self):
         """Show the schema creation dialog."""

@@ -123,11 +123,11 @@ class ExcelProcessor:
             logger.info(f"📋 Using sheet: {target_sheet}")
             
             # Read first few rows to analyze structure
-            df_sample = pd.read_excel(file_path, sheet_name=target_sheet, nrows=10)
+            df_sample = pd.read_excel(file_path, sheet_name=target_sheet, nrows=10, engine='openpyxl')
             column_names = df_sample.columns.tolist()
             
             # Get total row count (more efficient)
-            df_full = pd.read_excel(file_path, sheet_name=target_sheet)
+            df_full = pd.read_excel(file_path, sheet_name=target_sheet, engine='openpyxl')
             total_rows = len(df_full)
             total_columns = len(df_full.columns)
             
@@ -168,7 +168,7 @@ class ExcelProcessor:
         
         try:
             # Read Excel file
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            df = pd.read_excel(file_path, sheet_name=sheet_name, engine='openpyxl')
             columns_info = []
             
             for idx, column_name in enumerate(df.columns):
@@ -271,11 +271,16 @@ class ExcelProcessor:
             logger.debug(f"📋 Column names: {column_names}")
             
             # If start_row > 1, we need to skip the header rows
+            # IMPORTANT: start_row is 1-based (Excel row numbering)
+            # start_row = 2 means start from Excel row 2 (first data row after header)
+            # start_row = 1 means start from Excel row 1 (include header)
             if start_row > 1:
                 # Skip the first (start_row-1) rows
+                # Example: start_row = 2, skip 1 row (row 1 = header)
                 df_full = df_full.iloc[start_row-1:].copy()
                 total_rows = len(df_full)
                 logger.debug(f"📊 After skipping rows: {total_rows} rows remaining")
+                logger.info(f"📊 Data start row {start_row} = Excel row {start_row} (1-based indexing)")
             
             # Read in chunks by slicing the full DataFrame
             current_row = 0  # Start from beginning of loaded data
@@ -315,38 +320,7 @@ class ExcelProcessor:
             logger.error(f"❌ Failed to read Excel data: {e}")
             raise
     
-    def preview_data(self, file_path: Path, sheet_name: Optional[str] = None, 
-                    start_row: int = 1, num_rows: int = 5) -> pd.DataFrame:
-        """
-        Preview Excel data for user verification.
-        
-        Args:
-            file_path: Path to Excel file
-            sheet_name: Specific sheet name
-            start_row: Row to start preview (1-based)
-            num_rows: Number of rows to preview
-            
-        Returns:
-            pd.DataFrame: Preview data
-        """
-        logger.info(f"👀 Previewing {num_rows} rows starting from row {start_row}")
-        
-        try:
-            # Read preview data
-            df = pd.read_excel(
-                file_path,
-                sheet_name=sheet_name,
-                skiprows=start_row - 1,
-                nrows=num_rows,
-                header=0
-            )
-            
-            logger.info(f"✅ Preview loaded: {len(df)} rows x {len(df.columns)} columns")
-            return df
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to preview data: {e}")
-            raise
+    # Preview method removed - functionality not needed
     
     def _calculate_file_hash(self, file_path: Path) -> str:
         """Calculate MD5 hash of file for duplicate detection."""
