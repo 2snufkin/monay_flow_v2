@@ -13,7 +13,7 @@ from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
 
-from models.schema_definition import SchemaDefinition, CollectionDefinition
+from models.schema_definition import SchemaDefinition, CollectionDefinition, AttributeDefinition, IndexDefinition
 from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -192,14 +192,52 @@ class MongoSchemaManager:
                 )
                 collections.append(collection)
 
+            # Convert normalized_attributes from dict to AttributeDefinition objects
+            normalized_attributes = {}
+            raw_attrs = doc.get("normalized_attributes", {})
+            for excel_col, attr_data in raw_attrs.items():
+                if isinstance(attr_data, dict):
+                    # Convert dict to AttributeDefinition object
+                    normalized_attributes[excel_col] = AttributeDefinition(
+                        field_name=attr_data.get("field_name", excel_col),
+                        data_type=attr_data.get("data_type", "String"),
+                        description=attr_data.get("description", ""),
+                        is_required=attr_data.get("is_required", False)
+                    )
+                elif hasattr(attr_data, 'field_name'):
+                    # Already an AttributeDefinition object
+                    normalized_attributes[excel_col] = attr_data
+                else:
+                    # Fallback: create basic AttributeDefinition
+                    normalized_attributes[excel_col] = AttributeDefinition(
+                        field_name=str(excel_col).lower().replace(' ', '_').replace('-', '_'),
+                        data_type="String",
+                        description=f"Auto-generated field for {excel_col}",
+                        is_required=False
+                    )
+
+            # Convert suggested_indexes from dict to IndexDefinition objects
+            suggested_indexes = []
+            raw_indexes = doc.get("suggested_indexes", [])
+            for idx_data in raw_indexes:
+                if isinstance(idx_data, dict):
+                    suggested_indexes.append(IndexDefinition(
+                        field_names=idx_data.get("field_names", []),
+                        index_type=idx_data.get("index_type", "ascending"),
+                        reason=idx_data.get("reason", "Performance optimization")
+                    ))
+                elif hasattr(idx_data, 'field_names'):
+                    # Already an IndexDefinition object
+                    suggested_indexes.append(idx_data)
+
             # Create SchemaDefinition - you'll need to adjust this based on your actual model
             schema = SchemaDefinition(
                 schema_id=doc.get("schema_id", ""),
                 schema_name=doc.get("schema_name", ""),
                 database_name=doc.get("database_name", ""),
                 excel_column_names=doc.get("excel_column_names", []),
-                normalized_attributes=doc.get("normalized_attributes", {}),
-                suggested_indexes=doc.get("suggested_indexes", []),
+                normalized_attributes=normalized_attributes,
+                suggested_indexes=suggested_indexes,
                 duplicate_detection_columns=doc.get("duplicate_detection_columns", []),
                 duplicate_strategy=doc.get("duplicate_strategy", "skip"),
                 data_start_row=doc.get("data_start_row", 2),
