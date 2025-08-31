@@ -375,19 +375,7 @@ class ModernMainWindow:
         button_frame.grid_columnconfigure(0, weight=1)
         button_frame.grid_columnconfigure(1, weight=1)
 
-        preview_btn = tk.Button(
-            button_frame,
-            text="👀 Preview Data",
-            command=self.preview_data,
-            bg=self.colors["warning"],
-            fg="white",
-            font=("Segoe UI", 10, "bold"),
-            relief="flat",
-            padx=20,
-            pady=12,
-            cursor="hand2",
-        )
-        preview_btn.grid(row=0, column=0, padx=(0, 10))
+        # Preview button removed - functionality not needed
 
         import_btn = tk.Button(
             button_frame,
@@ -401,7 +389,7 @@ class ModernMainWindow:
             pady=12,
             cursor="hand2",
         )
-        import_btn.grid(row=0, column=1, padx=(10, 0))
+        import_btn.grid(row=0, column=0, padx=(0, 0))
 
     def create_modern_right_panel(self, parent):
         """Create the modern right panel for data preview and progress."""
