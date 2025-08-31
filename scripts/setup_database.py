@@ -17,33 +17,35 @@ def main():
     """Setup databases and test connections."""
     print("🗄️  Setting up MoneyFlow Database Connections")
     print("=" * 50)
-    
+
     try:
         from config.database_config import DatabaseManager
         from config.settings import validate_settings
-        
+
         # Validate settings first
         print("🔧 Validating application settings...")
         if not validate_settings():
             print("❌ Settings validation failed. Check your .env file.")
             return 1
         print("✅ Settings validation passed")
-        
+
         # Initialize database manager
         print("\n🔌 Initializing database connections...")
         db_manager = DatabaseManager()
-        
+
         if db_manager.initialize():
             print("✅ Database initialization successful!")
             print("\n📊 Database Status:")
-            print("  • SQLite: Ready for schema storage and UI state")
-            print("  • MongoDB: Connected and ready for Excel data storage (database: excel_imports)")
-            print("  • Architecture: SQLite (metadata) + MongoDB (data)")
+            print("  • MongoDB: Ready for schema storage and data")
+            print(
+                "  • MongoDB: Connected and ready for Excel data storage (database: excel_imports)"
+            )
+            print("  • Architecture: MongoDB (metadata + data)")
         else:
             print("❌ Database initialization failed")
             print("Check your MongoDB connection settings in .env file")
             return 1
-            
+
     except ImportError as e:
         print(f"❌ Import error: {e}")
         print("Make sure you've installed all dependencies:")
@@ -52,7 +54,7 @@ def main():
     except Exception as e:
         print(f"❌ Setup error: {e}")
         return 1
-    
+
     return 0
 
 

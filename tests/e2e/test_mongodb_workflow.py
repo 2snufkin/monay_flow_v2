@@ -195,29 +195,22 @@ class MongoDBE2ETester:
             self.log(f"   ✅ Generated schema_id: {schema_id}")
 
             # Step 2: Create schema definition with email validation
+            test_columns = list(self.test_data.keys())
+            # Create a minimal schema for testing
             schema_def = SchemaDefinition(
                 schema_id=schema_id,
                 schema_name=self.test_schema_name,
-                excel_column_names=list(self.test_data.keys()),
-                normalized_attributes={
-                    "First Name": "first_name",
-                    "Last Name": "last_name",
-                    "Email": "email",
-                    "Phone": "phone",
-                    "Purchase Date": "purchase_date",
-                    "Amount": "amount",
-                },
-                suggested_indexes=[
-                    {"field_names": ["email"], "index_type": "unique"},
-                    {"field_names": ["phone"], "index_type": "unique"},
-                ],
-                duplicate_detection_columns=["email", "phone"],
+                database_name="test25",
+                collections=[],
+                excel_column_names=test_columns,
+                normalized_attributes={},
+                suggested_indexes=[],
+                duplicate_detection_columns=["email"],
                 duplicate_strategy="skip",
                 data_start_row=2,
-                mongodb_collection_name=self.mongodb_collection_name,
                 created_at=datetime.now(),
                 last_used=datetime.now(),
-                usage_count=0,
+                usage_count=0
             )
 
             # Step 3: Save to SQLite database

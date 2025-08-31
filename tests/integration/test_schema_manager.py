@@ -9,13 +9,16 @@ and cleans up all records at the end.
 import sys
 import os
 from datetime import datetime
-from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+sys.path.insert(0, str(os.path.dirname(__file__) / "src"))
 
 from src.core.schema_manager import SchemaManager
-from src.models.schema_definition import SchemaDefinition, AttributeDefinition, IndexDefinition
+from src.models.schema_definition import (
+    SchemaDefinition,
+    AttributeDefinition,
+    IndexDefinition,
+)
 from src.config.database_config import get_sqlite_connection
 
 
@@ -33,7 +36,9 @@ def test_schema_manager():
     
     # Test 1: Create schema ID
     print("\n1️⃣ Testing create_schema...")
-    schema_id = schema_manager.create_schema(test_schema_name, test_columns)
+    schema_id = schema_manager.create_schema(
+        test_schema_name, test_columns
+    )
     print(f"   ✅ Generated schema_id: {schema_id}")
     
     # Test 2: Create a complete schema definition
@@ -129,7 +134,10 @@ def test_schema_manager():
     
     if all_schemas:
         latest_schema = all_schemas[0]
-        print(f"   📋 Latest schema: {latest_schema.schema_name} (ID: {latest_schema.schema_id})")
+        print(
+            f"   📋 Latest schema: {latest_schema.schema_name} "
+            f"(ID: {latest_schema.schema_id})"
+        )
         print(f"   📊 Columns: {len(latest_schema.excel_column_names)}")
         print(f"   🔍 Duplicate detection: {latest_schema.duplicate_detection_columns}")
     
@@ -138,7 +146,10 @@ def test_schema_manager():
     retrieved_schema = schema_manager.get_schema_by_id(schema_id)
     if retrieved_schema:
         print(f"   ✅ Retrieved schema: {retrieved_schema.schema_name}")
-        print(f"   📊 Normalized attributes: {len(retrieved_schema.normalized_attributes)}")
+        print(
+            f"   📊 Normalized attributes: "
+            f"{len(retrieved_schema.normalized_attributes)}"
+        )
         print(f"   🔍 Duplicate strategy: {retrieved_schema.duplicate_strategy}")
     else:
         print("   ❌ Failed to retrieve schema")
@@ -163,7 +174,9 @@ def test_schema_manager():
     
     # Test 9: Create another schema for testing
     print("\n9️⃣ Creating second test schema...")
-    schema_id_2 = schema_manager.create_schema("Test Schema 2", ["ID", "Name", "Value"])
+    schema_id_2 = schema_manager.create_schema(
+        "Test Schema 2", ["ID", "Name", "Value"]
+    )
     
     # Create minimal schema for second test
     schema_def_2 = SchemaDefinition(
@@ -190,7 +203,10 @@ def test_schema_manager():
     print(f"   ✅ Total schemas after creation: {len(all_schemas_after)}")
     
     for i, schema in enumerate(all_schemas_after):
-        print(f"   📋 Schema {i+1}: {schema.schema_name} (ID: {schema.schema_id})")
+        print(
+            f"   📋 Schema {i+1}: {schema.schema_name} "
+            f"(ID: {schema.schema_id})"
+        )
     
     return [schema_id, schema_id_2]
 

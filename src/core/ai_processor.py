@@ -62,6 +62,17 @@ class AISchemaProcessor:
             content = response.choices[0].message.content
             if not content:
                 raise ValueError("Empty response content from OpenAI API")
+            
+            # Clean the content - remove markdown code blocks if present
+            content = content.strip()
+            if content.startswith('```json'):
+                content = content[7:]  # Remove ```json
+            if content.startswith('```'):
+                content = content[3:]   # Remove ```
+            if content.endswith('```'):
+                content = content[:-3]  # Remove trailing ```
+            content = content.strip()
+            
             ai_response = json.loads(content)
             
             # Validate the response

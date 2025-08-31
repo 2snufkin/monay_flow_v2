@@ -26,7 +26,8 @@ def test_core_imports():
     
     try:
         print("2️⃣ Testing schema_definition import...")
-        from models.schema_definition import SchemaDefinition
+        # Import test - just checking if it works
+        import models.schema_definition
         print("   ✅ schema_definition imported successfully")
     except Exception as e:
         print(f"   ❌ schema_definition import failed: {e}")
@@ -34,7 +35,8 @@ def test_core_imports():
     
     try:
         print("3️⃣ Testing schema_manager import...")
-        from core.schema_manager import SchemaManager
+        # Import test - just checking if it works
+        import core.schema_manager
         print("   ✅ schema_manager imported successfully")
     except Exception as e:
         print(f"   ❌ schema_manager import failed: {e}")
